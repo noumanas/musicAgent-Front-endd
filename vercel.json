@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://music-agent-backend.vercel.app/api/$1" },
+    { "source": "/health", "destination": "https://music-agent-backend.vercel.app/health" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
