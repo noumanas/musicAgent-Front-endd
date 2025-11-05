@@ -1,6 +1,79 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
+// CSV generation utilities
+function convertToCSV(data, headers) {
+  const csvRows = []
+  // Add headers
+  csvRows.push(headers.map(h => `"${h}"`).join(','))
+  // Add data rows
+  data.forEach(row => {
+    const values = headers.map(header => {
+      const value = row[header] ?? ''
+      // Escape quotes and wrap in quotes if contains comma or quote
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value
+    })
+    csvRows.push(values.join(','))
+  })
+  return csvRows.join('\n')
+}
+
+function downloadCSV(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', filename)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+function exportSpotifyTracksToCSV(tracks, artistName) {
+  const headers = ['Title', 'Streams', 'Daily']
+  const data = tracks.map(t => ({
+    'Title': t.name || '',
+    'Streams': typeof t.streams === 'number' ? t.streams : '',
+    'Daily': typeof t.daily === 'number' ? t.daily : ''
+  }))
+  const csv = convertToCSV(data, headers)
+  const filename = `${artistName || 'spotify'}_tracks_${new Date().toISOString().split('T')[0]}.csv`
+  downloadCSV(csv, filename)
+}
+
+function exportYouTubeTracksToCSV(tracks, artistName) {
+  const headers = ['Title', 'Views', 'Daily']
+  const data = tracks.map(t => ({
+    'Title': t.name || '',
+    'Views': typeof t.views === 'number' ? t.views : '',
+    'Daily': typeof t.views_daily === 'number' ? t.views_daily : ''
+  }))
+  const csv = convertToCSV(data, headers)
+  const filename = `${artistName || 'youtube'}_tracks_${new Date().toISOString().split('T')[0]}.csv`
+  downloadCSV(csv, filename)
+}
+
+function exportTopTracksToCSV(tracks, artistName) {
+  const headers = ['Title', 'Album', 'Release Year', 'Spotify Streams', 'Spotify Daily', 'YouTube Views', 'YouTube Daily', 'Popularity']
+  const data = tracks.map(t => ({
+    'Title': t.name || '',
+    'Album': t.album || '',
+    'Release Year': t.release_year || '',
+    'Spotify Streams': typeof t.streams === 'number' ? t.streams : (t.streams_millions ? `${t.streams_millions}M` : ''),
+    'Spotify Daily': typeof t.streams_daily === 'number' ? t.streams_daily : '',
+    'YouTube Views': typeof t.youtube_views === 'number' ? t.youtube_views : (t.youtube_views_millions ? `${t.youtube_views_millions}M` : ''),
+    'YouTube Daily': typeof t.youtube_views_daily === 'number' ? t.youtube_views_daily : '',
+    'Popularity': t.popularity || ''
+  }))
+  const csv = convertToCSV(data, headers)
+  const filename = `${artistName || 'top'}_tracks_${new Date().toISOString().split('T')[0]}.csv`
+  downloadCSV(csv, filename)
+}
+
 function ResultCard({ result }) {
   const { type, name, data } = result || {}
   if (!type || !name || !data) return null
@@ -101,7 +174,26 @@ function ResultCard({ result }) {
       </div>
       {Array.isArray(data.top_tracks) && data.top_tracks.length > 0 && (
         <div>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>Top Tracks</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontWeight: 700 }}>Top Tracks</div>
+            <button
+              onClick={() => exportTopTracksToCSV(data.top_tracks, name)}
+              style={{
+                padding: '6px 12px',
+                background: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}
+              onMouseOver={(e) => e.target.style.background = '#374151'}
+              onMouseOut={(e) => e.target.style.background = '#1f2937'}
+            >
+              Download CSV
+            </button>
+          </div>
           <div style={{ display: 'grid', gap: 8 }}>
             {data.top_tracks.map(t => (
               <div key={t.id} style={{ padding: 12, border: '1px solid #1f2937', borderRadius: 10, display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
@@ -161,7 +253,26 @@ function ResultCard({ result }) {
 
       {Array.isArray(data.kworb_all_tracks) && data.kworb_all_tracks.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>All Tracks - Spotify (Kworb)</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontWeight: 700 }}>All Tracks - Spotify (Kworb)</div>
+            <button
+              onClick={() => exportSpotifyTracksToCSV(data.kworb_all_tracks, name)}
+              style={{
+                padding: '6px 12px',
+                background: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}
+              onMouseOver={(e) => e.target.style.background = '#374151'}
+              onMouseOut={(e) => e.target.style.background = '#1f2937'}
+            >
+              Download CSV
+            </button>
+          </div>
           <div style={{ border: '1px solid #1f2937', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px', padding: '10px 12px', background: '#0b1324' }}>
               <div className="muted">Title</div>
@@ -183,7 +294,26 @@ function ResultCard({ result }) {
 
       {Array.isArray(data.youtube_all_tracks) && data.youtube_all_tracks.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>All Tracks - YouTube (Kworb)</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontWeight: 700 }}>All Tracks - YouTube (Kworb)</div>
+            <button
+              onClick={() => exportYouTubeTracksToCSV(data.youtube_all_tracks, name)}
+              style={{
+                padding: '6px 12px',
+                background: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}
+              onMouseOver={(e) => e.target.style.background = '#374151'}
+              onMouseOut={(e) => e.target.style.background = '#1f2937'}
+            >
+              Download CSV
+            </button>
+          </div>
           <div style={{ border: '1px solid #1f2937', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px', padding: '10px 12px', background: '#0b1324' }}>
               <div className="muted">Title</div>
