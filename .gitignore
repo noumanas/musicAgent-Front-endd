@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+/dist/
+.vite/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Editor/OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Testing/coverage
+coverage/
+
+# Local caches
+*.local
+
+# Vercel local/project files
+.vercel/
+
