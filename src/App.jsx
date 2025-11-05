@@ -27,7 +27,7 @@ function ResultCard({ result }) {
             <div>{data.popularity ?? '—'}</div>
           </div>
           <div>
-            <div className="muted">Streams</div>
+            <div className="muted">Spotify Streams</div>
             <div>
               {typeof data.streams === 'number'
                 ? data.streams.toLocaleString()
@@ -36,6 +36,28 @@ function ResultCard({ result }) {
                     : (data.streams_estimate_millions ? `~${data.streams_estimate_millions}M (est.)` : '—'))}
             </div>
           </div>
+          {data.streams_daily && (
+            <div>
+              <div className="muted">Spotify Daily</div>
+              <div>{typeof data.streams_daily === 'number' ? data.streams_daily.toLocaleString() : '—'}</div>
+            </div>
+          )}
+          <div>
+            <div className="muted">YouTube Views</div>
+            <div>
+              {typeof data.youtube_views === 'number'
+                ? data.youtube_views.toLocaleString()
+                : (data.youtube_views_millions
+                    ? `${data.youtube_views_millions}M`
+                    : '—')}
+            </div>
+          </div>
+          {data.youtube_views_daily && (
+            <div>
+              <div className="muted">YouTube Daily</div>
+              <div>{typeof data.youtube_views_daily === 'number' ? data.youtube_views_daily.toLocaleString() : '—'}</div>
+            </div>
+          )}
         </div>
         <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {data.external_urls?.spotify && (
@@ -82,34 +104,54 @@ function ResultCard({ result }) {
           <div style={{ fontWeight: 700, marginBottom: 8 }}>Top Tracks</div>
           <div style={{ display: 'grid', gap: 8 }}>
             {data.top_tracks.map(t => (
-              <div key={t.id} style={{ padding: 12, border: '1px solid #1f2937', borderRadius: 10, display: 'grid', gridTemplateColumns: '1fr 120px 160px', gap: 8 }}>
+              <div key={t.id} style={{ padding: 12, border: '1px solid #1f2937', borderRadius: 10, display: 'grid', gridTemplateColumns: '1fr auto', gap: 12 }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>{t.name}</div>
                   <div className="muted">{t.album}</div>
                 </div>
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12, alignItems: 'start' }}>
                   <div>
                     <div className="muted">Year</div>
                     <div>{t.release_year ?? '—'}</div>
                   </div>
                   <div>
-                    <div className="muted">Streams</div>
+                    <div className="muted">Spotify</div>
                     <div>
                       {typeof t.streams === 'number'
                         ? t.streams.toLocaleString()
                         : (t.streams_millions
                             ? `${t.streams_millions}M`
-                            : (t.streams_estimate_millions ? `~${t.streams_estimate_millions}M (est.)` : '—'))}
+                            : (t.streams_estimate_millions ? `~${t.streams_estimate_millions}M` : '—'))}
                     </div>
+                    {t.streams_daily && (
+                      <div style={{ fontSize: '0.85em', color: '#6b7280' }}>
+                        {typeof t.streams_daily === 'number' ? `+${t.streams_daily.toLocaleString()}/day` : ''}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  {t.external_urls?.spotify && (
-                    <a href={t.external_urls.spotify} target="_blank" rel="noreferrer" className="link">Spotify</a>
-                  )}
-                  {t.preview_url && (
-                    <a href={t.preview_url} target="_blank" rel="noreferrer" className="link">Preview</a>
-                  )}
+                  <div>
+                    <div className="muted">YouTube</div>
+                    <div>
+                      {typeof t.youtube_views === 'number'
+                        ? t.youtube_views.toLocaleString()
+                        : (t.youtube_views_millions
+                            ? `${t.youtube_views_millions}M`
+                            : '—')}
+                    </div>
+                    {t.youtube_views_daily && (
+                      <div style={{ fontSize: '0.85em', color: '#6b7280' }}>
+                        {typeof t.youtube_views_daily === 'number' ? `+${t.youtube_views_daily.toLocaleString()}/day` : ''}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {t.external_urls?.spotify && (
+                      <a href={t.external_urls.spotify} target="_blank" rel="noreferrer" className="link">Spotify</a>
+                    )}
+                    {t.preview_url && (
+                      <a href={t.preview_url} target="_blank" rel="noreferrer" className="link">Preview</a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -119,7 +161,7 @@ function ResultCard({ result }) {
 
       {Array.isArray(data.kworb_all_tracks) && data.kworb_all_tracks.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>All Tracks (Kworb)</div>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>All Tracks - Spotify (Kworb)</div>
           <div style={{ border: '1px solid #1f2937', borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px', padding: '10px 12px', background: '#0b1324' }}>
               <div className="muted">Title</div>
@@ -132,6 +174,28 @@ function ResultCard({ result }) {
                   <div>{k.name}</div>
                   <div>{typeof k.streams === 'number' ? k.streams.toLocaleString() : '—'}</div>
                   <div>{typeof k.daily === 'number' ? k.daily.toLocaleString() : '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {Array.isArray(data.youtube_all_tracks) && data.youtube_all_tracks.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>All Tracks - YouTube (Kworb)</div>
+          <div style={{ border: '1px solid #1f2937', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px', padding: '10px 12px', background: '#0b1324' }}>
+              <div className="muted">Title</div>
+              <div className="muted">Views</div>
+              <div className="muted">Daily</div>
+            </div>
+            <div style={{ maxHeight: 420, overflow: 'auto' }}>
+              {data.youtube_all_tracks.map((y, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px', padding: '10px 12px', borderTop: '1px solid #1f2937' }}>
+                  <div>{y.name}</div>
+                  <div>{typeof y.views === 'number' ? y.views.toLocaleString() : '—'}</div>
+                  <div>{typeof y.views_daily === 'number' ? y.views_daily.toLocaleString() : '—'}</div>
                 </div>
               ))}
             </div>
